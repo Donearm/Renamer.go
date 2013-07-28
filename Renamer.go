@@ -146,8 +146,7 @@ func flagsInit() {
 	flag.Parse()
 
 	if regexpArg == "" && prefixArg == "" && suffixArg == "" && indexArg == "" && lowerArg == false && upperArg == false {
-		//TODO: better message here...
-		printUsage("At least a flag must be given, nothing to do...")
+		printUsage("At least one of the mandatory actions must be given, nothing to do...")
 	}
 }
 
