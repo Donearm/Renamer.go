@@ -174,6 +174,8 @@ func writeFile(oldname, newname string) {
 				fmt.Fprintf(os.Stderr, "An error occurred during the copy of %s to %s\n", oldname, newname)
 				fmt.Fprintf(os.Stderr, copy_err.Error())
 				operationSuccessful = operationSuccessful + 1
+			} else {
+				fmt.Fprintf(os.Stdout, "Copying %s to %s\n", oldname, newname)
 			}
 		} else {
 			rename_err := os.Rename(oldname, newname)
@@ -181,6 +183,8 @@ func writeFile(oldname, newname string) {
 				fmt.Fprintf(os.Stderr, "An error occurred during the renaming of %s to %s\n", oldname, newname)
 				fmt.Fprintf(os.Stderr, rename_err.Error())
 				operationSuccessful = operationSuccessful + 1
+			} else {
+				fmt.Fprintf(os.Stdout, "Renaming %s to %s\n", oldname, newname)
 			}
 		}
 	}
