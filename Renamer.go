@@ -20,7 +20,7 @@ import (
 )
 
 var usageMessage string = `
-renamer.go (-p <prefix>|-s <suffix>|-i <indexname> -I <num>|-l|-u) [-x <regexp>] [-t <target_dir>] -[cn]
+renamer.go (-p <prefix>|-s <suffix>|-i <indexname> -I <num>|-l|-u) [-x <regexp>] [-t <target_dir>] -[cnr]
 
 renamer.go will rename all files matching a regexp or all files in the 
 given directory (and optionally in all its subdirectories) by the flag 
@@ -67,6 +67,9 @@ Arguments:
 	-force|-f
 		Overwrite existing files. The default is to not copy/rename 
 		if the target file already exists
+
+	-recursive|-r
+		Operate recursively on all subdirectories of target-dir
 `
 
 var regexpArg string // the regexp argument
@@ -81,6 +84,7 @@ var upperArg bool // the uppercase switch
 var copyArg bool // the copy switch
 var dryrunArg bool // the dry-run switch
 var forceArg bool  // the force switch
+var recursiveArg bool // the recursive switch
 
 var operationSuccessful int // numeric flag to keep trace of what went 
 			// wrong during the renaming
@@ -111,6 +115,7 @@ func flagsInit() {
 		def_copy		= false
 		def_dryrun		= false
 		def_force		= false
+		def_recursive	= false
 	)
 
 	flag.StringVar(&regexpArg, "regexp", def_regexp, "")
@@ -135,18 +140,21 @@ func flagsInit() {
 	flag.BoolVar(&dryrunArg, "n", def_dryrun, "")
 	flag.BoolVar(&forceArg, "force", def_force, "")
 	flag.BoolVar(&forceArg, "f", def_force, "")
+	flag.BoolVar(&recursiveArg, "recursive", def_recursive, "")
+	flag.BoolVar(&recursiveArg, "r", def_recursive, "")
 
 	flag.Parse()
 
 	if regexpArg == "" && prefixArg == "" && suffixArg == "" && indexArg == "" && lowerArg == false && upperArg == false {
+		//TODO: better message here...
 		printUsage("At least a flag must be given, nothing to do...")
 	}
 }
 
 // Write a renamed or a copy of a file to disk
 func writeFile(oldname, newname string) {
-	newname = filepath.Join(targetArg, newname)
-	oldname = filepath.Join(targetArg, oldname)
+/*	newname = filepath.Join(targetArg, newname)
+/*	oldname = filepath.Join(targetArg, oldname) */
 	// check if the new filename is already present
 	_, lstat_err := os.Lstat(newname)
 	if lstat_err == nil && forceArg == false {
@@ -192,9 +200,10 @@ func writeFile(oldname, newname string) {
 
 // Add a prefix string to a name
 func addPrefix(names []string, prefix string) int {
-	var finalname string
+	var finalname, dirname string
 	for _, f := range names {
-		finalname = prefix + filepath.Base(f)
+		dirname = filepath.Dir(f) + "/"
+		finalname = dirname + prefix + filepath.Base(f)
 		writeFile(f, finalname)
 	}
 	return 0
@@ -202,11 +211,12 @@ func addPrefix(names []string, prefix string) int {
 
 // Add a suffix string to a name
 func addSuffix(names []string, suffix string) int {
-	var finalname string
+	var finalname, dirname, justname, ext string
 	for _, f := range names {
-		ext := filepath.Ext(f)
-		justname := strings.TrimSuffix(filepath.Base(f), ext)
-		finalname = justname + suffix + ext
+		ext = filepath.Ext(f)
+		dirname = filepath.Dir(f) + "/"
+		justname = strings.TrimSuffix(filepath.Base(f), ext)
+		finalname = dirname + justname + suffix + ext
 		writeFile(f, finalname)
 	}
 	return 0
@@ -214,10 +224,11 @@ func addSuffix(names []string, suffix string) int {
 
 // Rename a slice of filenames to <newname><count>.<extension>
 func indexName(names []string, newname string, count int) int {
-	var finalname string
+	var finalname, dirname, ext string
 	for _, f := range names {
-		ext := filepath.Ext(f)
-		finalname = fmt.Sprintf("%s%03d%s", newname, count, ext)
+		ext = filepath.Ext(f)
+		dirname = filepath.Dir(f) + "/"
+		finalname = fmt.Sprintf("%s%s%03d%s", dirname, newname, count, ext)
 		writeFile(f, finalname)
 		count++
 	}
@@ -226,9 +237,10 @@ func indexName(names []string, newname string, count int) int {
 
 // Make filenames all lowercase
 func lowercaseFiles(names []string) int {
-	var finalname string
+	var finalname, dirname string
 	for _, f := range names {
-		finalname = strings.ToLower(filepath.Base(f))
+		dirname = filepath.Dir(f) + "/"
+		finalname = dirname + strings.ToLower(filepath.Base(f))
 		writeFile(f, finalname)
 	}
 	return 0
@@ -236,9 +248,10 @@ func lowercaseFiles(names []string) int {
 
 // Make filenames all uppercase
 func uppercaseFiles(names []string) int {
-	var finalname string
+	var finalname, dirname string
 	for _, f := range names {
-		finalname = strings.ToUpper(filepath.Base(f))
+		dirname = filepath.Dir(f) + "/"
+		finalname = dirname + strings.ToUpper(filepath.Base(f))
 		writeFile(f, finalname)
 	}
 	return 0
@@ -286,9 +299,9 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 	// 2 different slices
 	for _, f := range filesindir {
 		if f.IsDir() {
-			alldirectories = append(alldirectories, f.Name())
+			alldirectories = append(alldirectories, filepath.Join(complete_path, f.Name()))
 		} else {
-			allfiles = append(allfiles, f.Name())
+			allfiles = append(allfiles, filepath.Join(complete_path, f.Name()))
 		}
 	}
 
@@ -302,10 +315,25 @@ func renameFiles(dir, files []string) int {
 	var result int // the integer returned by each functions, signaling 
 					// success or failure
 
-	//TODO: add a check for the `dir` slice and a recursiveArg to act 
-	//recursively on all subdirectories of targetDir. Save each files 
-	//with its full path or each one with the subdirectories' so it's 
-	//possible to rename/copy it with os.Rename later in writeFile()
+	// recursively search on every directory in dir for other 
+	// files/directories if recursiveArg switch has been enabled
+	if dir != nil && recursiveArg == true {
+		for _, d := range dir {
+			nd, nf := getFilesFromDir(d)
+			// if it's a dir, append to []dir
+			if len(nd) > 0 {
+				for _, i := range nd {
+					dir = append(dir, i)
+				}
+			}
+			// if it's a file, append to []files
+			if len(nf) > 0 {
+				for _, i := range nf {
+					files = append(files, i)
+				}
+			}
+		}
+	}
 
 	// check if the files should match a given regexp
 	if regexpArg != "" {

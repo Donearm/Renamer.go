@@ -27,6 +27,7 @@ The flags are:
 * **-n/-dry-run**		List operations but don't actually copy/rename anything
 * **-c/-copy**			Copy instead of renaming
 * **-f/-force**			Overwrite existing files
+* **-r/-recursive**		Operate recursively into subdirectories
 
 At least one between `prefix`, `suffix`, `index`, `lowercase` and `uppercase` 
 must be given. If no target directory specified, Renamer.go will operate on the 
