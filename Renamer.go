@@ -201,8 +201,8 @@ func writeFile(oldname, newname string) {
 func addPrefix(names []string, prefix string) int {
 	var finalname, dirname string
 	for _, f := range names {
-		dirname = filepath.Dir(f) + "/"
-		finalname = dirname + prefix + filepath.Base(f)
+		dirname = filepath.Dir(f)
+		finalname = filepath.Join(dirname, prefix + filepath.Base(f))
 		writeFile(f, finalname)
 	}
 	return 0
@@ -213,9 +213,9 @@ func addSuffix(names []string, suffix string) int {
 	var finalname, dirname, justname, ext string
 	for _, f := range names {
 		ext = filepath.Ext(f)
-		dirname = filepath.Dir(f) + "/"
+		dirname = filepath.Dir(f)
 		justname = strings.TrimSuffix(filepath.Base(f), ext)
-		finalname = dirname + justname + suffix + ext
+		finalname = filepath.Join(dirname, justname + suffix + ext)
 		writeFile(f, finalname)
 	}
 	return 0
@@ -226,8 +226,8 @@ func indexName(names []string, newname string, count int) int {
 	var finalname, dirname, ext string
 	for _, f := range names {
 		ext = filepath.Ext(f)
-		dirname = filepath.Dir(f) + "/"
-		finalname = fmt.Sprintf("%s%s%03d%s", dirname, newname, count, ext)
+		dirname = filepath.Dir(f)
+		finalname = fmt.Sprintf("%s/%s%03d%s", dirname, newname, count, ext)
 		writeFile(f, finalname)
 		count++
 	}
@@ -238,8 +238,8 @@ func indexName(names []string, newname string, count int) int {
 func lowercaseFiles(names []string) int {
 	var finalname, dirname string
 	for _, f := range names {
-		dirname = filepath.Dir(f) + "/"
-		finalname = dirname + strings.ToLower(filepath.Base(f))
+		dirname = filepath.Dir(f)
+		finalname = filepath.Join(dirname, strings.ToLower(filepath.Base(f)))
 		writeFile(f, finalname)
 	}
 	return 0
@@ -249,8 +249,8 @@ func lowercaseFiles(names []string) int {
 func uppercaseFiles(names []string) int {
 	var finalname, dirname string
 	for _, f := range names {
-		dirname = filepath.Dir(f) + "/"
-		finalname = dirname + strings.ToUpper(filepath.Base(f))
+		dirname = filepath.Dir(f)
+		finalname = filepath.Join(dirname, strings.ToUpper(filepath.Base(f)))
 		writeFile(f, finalname)
 	}
 	return 0
