@@ -109,7 +109,7 @@ func flagsInit() {
 		def_suffix		= ""
 		def_index		= ""
 		def_num			= 1
-		def_target		= ""
+		def_target		= "."
 		def_lowercase	= false
 		def_uppercase	= false
 		def_copy		= false
