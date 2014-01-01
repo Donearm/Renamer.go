@@ -3,7 +3,7 @@ renamer.go
 
 Renaming files script on various patterns
 
-Author: Gianluca Fiore <forod.g@gmail.com> © 2013
+Author: Gianluca Fiore <forod.g@gmail.com> © 2013-2014
 */
 
 package main
