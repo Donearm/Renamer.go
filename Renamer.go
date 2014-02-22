@@ -9,14 +9,14 @@ Author: Gianluca Fiore <forod.g@gmail.com> © 2013-2014
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"errors"
 	"strings"
-	"io"
 )
 
 var usageMessage string = `
@@ -72,26 +72,26 @@ Arguments:
 		Operate recursively on all subdirectories of target-dir
 `
 
-var regexpArg string // the regexp argument
-var fileRegex *regexp.Regexp // the files matching the regexp
-var prefixArg string // the prefix
-var suffixArg string // the suffix
-var indexArg string  // the <name> in the <name><num> pattern
-var numArg int // the <num> in the <name><num> pattern
-var targetArg string // the target directory
-var lowerArg bool // the lowercase switch
-var upperArg bool // the uppercase switch
-var copyArg bool // the copy switch
-var dryrunArg bool // the dry-run switch
-var forceArg bool  // the force switch
-var recursiveArg bool // the recursive switch
+var regexpArg string			// the regexp argument
+var fileRegex *regexp.Regexp	// the files matching the regexp
+var prefixArg string			// the prefix
+var suffixArg string			// the suffix
+var indexArg string				// the <name> in the <name><num> pattern
+var numArg int					// the <num> in the <name><num> pattern
+var targetArg string			// the target directory
+var lowerArg bool				// the lowercase switch
+var upperArg bool				// the uppercase switch
+var copyArg bool				// the copy switch
+var dryrunArg bool				// the dry-run switch
+var forceArg bool				// the force switch
+var recursiveArg bool			// the recursive switch
 
-var operationSuccessful int // numeric flag to keep trace of what went 
-			// wrong during the renaming
+var operationSuccessful int		// numeric flag to keep trace of what went
+// wrong during the renaming
 
 // Print a message and the usage instructions
 func printUsage(msg string) {
-	fmt.Fprintf(os.Stderr, msg + "\n")
+	fmt.Fprintf(os.Stderr, msg+"\n")
 	fmt.Fprintf(os.Stderr, usageMessage)
 	os.Exit(2)
 }
@@ -152,8 +152,6 @@ func flagsInit() {
 
 // Write a renamed or a copy of a file to disk
 func writeFile(oldname, newname string) {
-/*	newname = filepath.Join(targetArg, newname)
-/*	oldname = filepath.Join(targetArg, oldname) */
 	// check if the new filename is already present
 	_, lstat_err := os.Lstat(newname)
 	if lstat_err == nil && forceArg == false {
@@ -202,7 +200,7 @@ func addPrefix(names []string, prefix string) int {
 	var finalname, dirname string
 	for _, f := range names {
 		dirname = filepath.Dir(f)
-		finalname = filepath.Join(dirname, prefix + filepath.Base(f))
+		finalname = filepath.Join(dirname, prefix+filepath.Base(f))
 		writeFile(f, finalname)
 	}
 	return 0
@@ -215,7 +213,7 @@ func addSuffix(names []string, suffix string) int {
 		ext = filepath.Ext(f)
 		dirname = filepath.Dir(f)
 		justname = strings.TrimSuffix(filepath.Base(f), ext)
-		finalname = filepath.Join(dirname, justname + suffix + ext)
+		finalname = filepath.Join(dirname, justname+suffix+ext)
 		writeFile(f, finalname)
 	}
 	return 0
@@ -258,7 +256,7 @@ func uppercaseFiles(names []string) int {
 
 // Get all files and directories
 func getFilesFromDir(dirname string) ([]string, []string) {
-	var complete_path string // final, absolute, path
+	var complete_path string				// final, absolute, path
 	var filesindir = make([]os.FileInfo, 0) // files & directories found in path
 	var allfiles = make([]string, 0)
 	var alldirectories = make([]string, 0)
@@ -294,7 +292,7 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 		return alldirectories, allfiles
 	}
 
-	// check in filesindir slice and separate directories from files in 
+	// check in filesindir slice and separate directories from files in
 	// 2 different slices
 	for _, f := range filesindir {
 		if f.IsDir() {
@@ -309,12 +307,12 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 
 func renameFiles(dir, files []string) int {
 	var basename string
-	var matchingfiles []string // a slice containing only the files 
-					// matching the regexp passed as argument (if)
-	var result int // the integer returned by each functions, signaling 
-					// success or failure
+	var matchingfiles []string	// a slice containing only the files 
+	// matching the regexp passed as argument (if)
+	var result int				// the integer returned by each functions,
+	// signaling success or failure
 
-	// recursively search on every directory in dir for other 
+	// recursively search on every directory in dir for other
 	// files/directories if recursiveArg switch has been enabled
 	if dir != nil && recursiveArg == true {
 		for _, d := range dir {
@@ -337,7 +335,7 @@ func renameFiles(dir, files []string) int {
 	// check if the files should match a given regexp
 	if regexpArg != "" {
 		for _, f := range files {
-		basename = filepath.Base(f)
+			basename = filepath.Base(f)
 			// Compile and check if the regexp is a valid one
 			compRegexp, err := regexp.Compile(regexpArg)
 			if err != nil {
@@ -394,7 +392,6 @@ func renameFiles(dir, files []string) int {
 	return result
 }
 
-
 func main() {
 	var success_rename int
 	var directories, files []string
@@ -406,7 +403,7 @@ func main() {
 	success_rename = renameFiles(directories, files)
 
 	// check that everything went smoothly
-	if success_rename == 0  && operationSuccessful == 0 {
+	if success_rename == 0 && operationSuccessful == 0 {
 		fmt.Fprintf(os.Stdout, "\nRenaming complete\n")
 	} else {
 		fmt.Fprintf(os.Stdout, "\nNot all files were correctly renamed, check the previous error messages")
