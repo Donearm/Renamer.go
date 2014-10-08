@@ -18,6 +18,7 @@ The flags are:
 * **-I/-startnumber**	The number to start the incremental renaming of 
   filenames according to `--index` above. It has no significance without 
   `--index`
+* **-e/-lower-extension**	Lowercase the extensions
 * **-l/-lowercase**	Lowercase the filenames
 * **-u/-uppercase**	Uppercase the filenames
 * **-x/-regexp**		Rename only files matching this regexp. If none, rename 
@@ -29,9 +30,9 @@ The flags are:
 * **-f/-force**			Overwrite existing files
 * **-r/-recursive**		Operate recursively into subdirectories
 
-At least one between `prefix`, `suffix`, `index`, `lowercase` and `uppercase` 
-must be given. If no target directory specified, Renamer.go will operate on the 
-current directory.
+At least one between `prefix`, `suffix`, `index`, `lower-extension`, `lowercase` 
+and `uppercase` must be given. If no target directory specified, Renamer.go will 
+operate on the current directory.
 
 License
 ======
