@@ -20,13 +20,13 @@ import (
 )
 
 var usageMessage string = `
-renamer.go (-p <prefix>|-s <suffix>|-i <indexname> -I <num>|-l|-u) [-x <regexp>] [-t <target_dir>] -[cnr]
+renamer.go (-p <prefix>|-s <suffix>|-i <indexname> -I <num>|-e|-l|-u) [-x <regexp>] [-t <target_dir>] -[cnr]
 
 renamer.go will rename all files matching a regexp or all files in the 
 given directory (and optionally in all its subdirectories) by the flag 
 chosen. It can add a prefix/suffix, rename according to a 
-<name><numeric_index> pattern, make all low/uppercase and copy files 
-somewhere else leaving the originals untouched.
+<name><numeric_index> pattern, make all low/uppercase, lowercase the 
+extension and copy files somewhere else leaving the originals untouched.
 
 Arguments:
 
@@ -53,6 +53,9 @@ Arguments:
 	-copy|-c
 		Copy instead of renaming
 
+	-lower-extension|-e
+		Lowercase the extension
+
 	-lowercase|-l
 		Lowercase the new filename. It is mutually exclusive with 
 		'-u'
@@ -72,21 +75,22 @@ Arguments:
 		Operate recursively on all subdirectories of target-dir
 `
 
-var regexpArg string			// the regexp argument
-var fileRegex *regexp.Regexp	// the files matching the regexp
-var prefixArg string			// the prefix
-var suffixArg string			// the suffix
-var indexArg string				// the <name> in the <name><num> pattern
-var numArg int					// the <num> in the <name><num> pattern
-var targetArg string			// the target directory
-var lowerArg bool				// the lowercase switch
-var upperArg bool				// the uppercase switch
-var copyArg bool				// the copy switch
-var dryrunArg bool				// the dry-run switch
-var forceArg bool				// the force switch
-var recursiveArg bool			// the recursive switch
+var regexpArg string         // the regexp argument
+var fileRegex *regexp.Regexp // the files matching the regexp
+var prefixArg string         // the prefix
+var suffixArg string         // the suffix
+var indexArg string          // the <name> in the <name><num> pattern
+var numArg int               // the <num> in the <name><num> pattern
+var targetArg string         // the target directory
+var lowerExtArg bool         // the lower extension switch
+var lowerArg bool            // the lowercase switch
+var upperArg bool            // the uppercase switch
+var copyArg bool             // the copy switch
+var dryrunArg bool           // the dry-run switch
+var forceArg bool            // the force switch
+var recursiveArg bool        // the recursive switch
 
-var operationSuccessful int		// numeric flag to keep trace of what went
+var operationSuccessful int // numeric flag to keep trace of what went
 // wrong during the renaming
 
 // Print a message and the usage instructions
@@ -104,18 +108,19 @@ func flagsInit() {
 	}
 
 	const (
-		def_regexp		= ""
-		def_prefix		= ""
-		def_suffix		= ""
-		def_index		= ""
-		def_num			= 1
-		def_target		= "."
-		def_lowercase	= false
-		def_uppercase	= false
-		def_copy		= false
-		def_dryrun		= false
-		def_force		= false
-		def_recursive	= false
+		def_regexp    = ""
+		def_prefix    = ""
+		def_suffix    = ""
+		def_index     = ""
+		def_num       = 1
+		def_target    = "."
+		def_lowerext  = false
+		def_lowercase = false
+		def_uppercase = false
+		def_copy      = false
+		def_dryrun    = false
+		def_force     = false
+		def_recursive = false
 	)
 
 	flag.StringVar(&regexpArg, "regexp", def_regexp, "")
@@ -130,6 +135,8 @@ func flagsInit() {
 	flag.IntVar(&numArg, "I", def_num, "")
 	flag.StringVar(&targetArg, "target", def_target, "")
 	flag.StringVar(&targetArg, "t", def_target, "")
+	flag.BoolVar(&lowerExtArg, "lower-extension", def_lowerext, "")
+	flag.BoolVar(&lowerExtArg, "e", def_lowerext, "")
 	flag.BoolVar(&lowerArg, "lowercase", def_lowercase, "")
 	flag.BoolVar(&lowerArg, "l", def_lowercase, "")
 	flag.BoolVar(&upperArg, "uppercase", def_uppercase, "")
@@ -145,7 +152,7 @@ func flagsInit() {
 
 	flag.Parse()
 
-	if regexpArg == "" && prefixArg == "" && suffixArg == "" && indexArg == "" && lowerArg == false && upperArg == false {
+	if regexpArg == "" && prefixArg == "" && suffixArg == "" && indexArg == "" && lowerExtArg == false && lowerArg == false && upperArg == false {
 		printUsage("At least one of the mandatory actions must be given, nothing to do...")
 	}
 }
@@ -232,6 +239,18 @@ func indexName(names []string, newname string, count int) int {
 	return 0
 }
 
+// Make extensions lowercase
+func lowercaseExtension(names []string) int {
+	var finalname, dirname, basename, ext string
+	for _, f := range names {
+		dirname = filepath.Dir(f)
+		basename = filepath.Base(f)
+		ext = filepath.Ext(f)
+		finalname = filepath.Join(dirname, strings.TrimSuffix(basename, ext)+strings.ToLower(strings.TrimSuffix(ext, basename)))
+	}
+	return 0
+}
+
 // Make filenames all lowercase
 func lowercaseFiles(names []string) int {
 	var finalname, dirname string
@@ -256,7 +275,7 @@ func uppercaseFiles(names []string) int {
 
 // Get all files and directories
 func getFilesFromDir(dirname string) ([]string, []string) {
-	var complete_path string				// final, absolute, path
+	var complete_path string                // final, absolute, path
 	var filesindir = make([]os.FileInfo, 0) // files & directories found in path
 	var allfiles = make([]string, 0)
 	var alldirectories = make([]string, 0)
@@ -307,9 +326,9 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 
 func renameFiles(dir, files []string) int {
 	var basename string
-	var matchingfiles []string	// a slice containing only the files 
+	var matchingfiles []string // a slice containing only the files
 	// matching the regexp passed as argument (if)
-	var result int				// the integer returned by each functions,
+	var result int // the integer returned by each functions,
 	// signaling success or failure
 
 	// recursively search on every directory in dir for other
@@ -381,6 +400,9 @@ func renameFiles(dir, files []string) int {
 		// can't use both
 		printUsage("Can't use both lowercase and uppercase, choose one only!")
 		return 1
+	}
+	if lowerExtArg == true {
+		result = lowercaseExtension(files)
 	}
 	if lowerArg == true {
 		result = lowercaseFiles(files)
