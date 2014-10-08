@@ -247,6 +247,7 @@ func lowercaseExtension(names []string) int {
 		basename = filepath.Base(f)
 		ext = filepath.Ext(f)
 		finalname = filepath.Join(dirname, strings.TrimSuffix(basename, ext)+strings.ToLower(strings.TrimSuffix(ext, basename)))
+		writeFile(f, finalname)
 	}
 	return 0
 }
