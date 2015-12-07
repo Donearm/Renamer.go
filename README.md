@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Donearm/Renamer.go.svg?branch=master)](https://travis-ci.org/Donearm/Renamer.go)
+
 Renamer.go
 ==========
 
