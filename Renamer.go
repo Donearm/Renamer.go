@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-var usageMessage string = `
+var usageMessage = `
 renamer.go (-p <prefix>|-s <suffix>|-i <indexname> -I <num>|-e|-l|-u) [-x <regexp>] [-t <target_dir>] -[cnr]
 
 renamer.go will rename all files matching a regexp or all files in the 
@@ -108,47 +108,47 @@ func flagsInit() {
 	}
 
 	const (
-		def_regexp    = ""
-		def_prefix    = ""
-		def_suffix    = ""
-		def_index     = ""
-		def_num       = 1
-		def_target    = "."
-		def_lowerext  = false
-		def_lowercase = false
-		def_uppercase = false
-		def_copy      = false
-		def_dryrun    = false
-		def_force     = false
-		def_recursive = false
+		defRegexp    = ""
+		defPrefix    = ""
+		defSuffix    = ""
+		defIndex     = ""
+		defNum       = 1
+		defTarget    = "."
+		defLowerext  = false
+		defLowercase = false
+		defUppercase = false
+		defCopy      = false
+		defDryrun    = false
+		defForce     = false
+		defRecursive = false
 	)
 
-	flag.StringVar(&regexpArg, "regexp", def_regexp, "")
-	flag.StringVar(&regexpArg, "x", def_regexp, "")
-	flag.StringVar(&prefixArg, "prefix", def_prefix, "")
-	flag.StringVar(&prefixArg, "p", def_prefix, "")
-	flag.StringVar(&suffixArg, "suffix", def_suffix, "")
-	flag.StringVar(&suffixArg, "s", def_suffix, "")
-	flag.StringVar(&indexArg, "index", def_index, "")
-	flag.StringVar(&indexArg, "i", def_index, "")
-	flag.IntVar(&numArg, "startnumber", def_num, "")
-	flag.IntVar(&numArg, "I", def_num, "")
-	flag.StringVar(&targetArg, "target", def_target, "")
-	flag.StringVar(&targetArg, "t", def_target, "")
-	flag.BoolVar(&lowerExtArg, "lower-extension", def_lowerext, "")
-	flag.BoolVar(&lowerExtArg, "e", def_lowerext, "")
-	flag.BoolVar(&lowerArg, "lowercase", def_lowercase, "")
-	flag.BoolVar(&lowerArg, "l", def_lowercase, "")
-	flag.BoolVar(&upperArg, "uppercase", def_uppercase, "")
-	flag.BoolVar(&upperArg, "u", def_uppercase, "")
-	flag.BoolVar(&copyArg, "copy", def_copy, "")
-	flag.BoolVar(&copyArg, "c", def_copy, "")
-	flag.BoolVar(&dryrunArg, "dry-run", def_dryrun, "")
-	flag.BoolVar(&dryrunArg, "n", def_dryrun, "")
-	flag.BoolVar(&forceArg, "force", def_force, "")
-	flag.BoolVar(&forceArg, "f", def_force, "")
-	flag.BoolVar(&recursiveArg, "recursive", def_recursive, "")
-	flag.BoolVar(&recursiveArg, "r", def_recursive, "")
+	flag.StringVar(&regexpArg, "regexp", defRegexp, "")
+	flag.StringVar(&regexpArg, "x", defRegexp, "")
+	flag.StringVar(&prefixArg, "prefix", defPrefix, "")
+	flag.StringVar(&prefixArg, "p", defPrefix, "")
+	flag.StringVar(&suffixArg, "suffix", defSuffix, "")
+	flag.StringVar(&suffixArg, "s", defSuffix, "")
+	flag.StringVar(&indexArg, "index", defIndex, "")
+	flag.StringVar(&indexArg, "i", defIndex, "")
+	flag.IntVar(&numArg, "startnumber", defNum, "")
+	flag.IntVar(&numArg, "I", defNum, "")
+	flag.StringVar(&targetArg, "target", defTarget, "")
+	flag.StringVar(&targetArg, "t", defTarget, "")
+	flag.BoolVar(&lowerExtArg, "lower-extension", defLowerext, "")
+	flag.BoolVar(&lowerExtArg, "e", defLowerext, "")
+	flag.BoolVar(&lowerArg, "lowercase", defLowercase, "")
+	flag.BoolVar(&lowerArg, "l", defLowercase, "")
+	flag.BoolVar(&upperArg, "uppercase", defUppercase, "")
+	flag.BoolVar(&upperArg, "u", defUppercase, "")
+	flag.BoolVar(&copyArg, "copy", defCopy, "")
+	flag.BoolVar(&copyArg, "c", defCopy, "")
+	flag.BoolVar(&dryrunArg, "dry-run", defDryrun, "")
+	flag.BoolVar(&dryrunArg, "n", defDryrun, "")
+	flag.BoolVar(&forceArg, "force", defForce, "")
+	flag.BoolVar(&forceArg, "f", defForce, "")
+	flag.BoolVar(&recursiveArg, "recursive", defRecursive, "")
+	flag.BoolVar(&recursiveArg, "r", defRecursive, "")
 
 	flag.Parse()
 
@@ -160,8 +160,8 @@ func flagsInit() {
 // Write a renamed or a copy of a file to disk
 func writeFile(oldname, newname string) {
 	// check if the new filename is already present
-	_, lstat_err := os.Lstat(newname)
-	if lstat_err == nil && forceArg == false {
+	_, lstatErr := os.Lstat(newname)
+	if lstatErr == nil && forceArg == false {
 		fmt.Fprintf(os.Stderr, "File %s already exist! Use -force to override it\n", newname)
 		operationSuccessful = operationSuccessful + 1
 	}
@@ -171,29 +171,29 @@ func writeFile(oldname, newname string) {
 		operationSuccessful = operationSuccessful + 0
 	} else {
 		if copyArg {
-			copyf, create_err := os.Create(newname)
-			if create_err != nil {
-				fmt.Fprintf(os.Stderr, create_err.Error())
+			copyf, createErr := os.Create(newname)
+			if createErr != nil {
+				fmt.Fprintf(os.Stderr, createErr.Error())
 				operationSuccessful = operationSuccessful + 1
 			}
-			originalf, open_err := os.Open(oldname)
-			if open_err != nil {
-				fmt.Fprintf(os.Stderr, open_err.Error())
+			originalf, openErr := os.Open(oldname)
+			if openErr != nil {
+				fmt.Fprintf(os.Stderr, openErr.Error())
 				operationSuccessful = operationSuccessful + 1
 			}
-			_, copy_err := io.Copy(copyf, originalf)
-			if copy_err != nil {
+			_, copyErr := io.Copy(copyf, originalf)
+			if copyErr != nil {
 				fmt.Fprintf(os.Stderr, "An error occurred during the copy of %s to %s\n", oldname, newname)
-				fmt.Fprintf(os.Stderr, copy_err.Error())
+				fmt.Fprintf(os.Stderr, copyErr.Error())
 				operationSuccessful = operationSuccessful + 1
 			} else {
 				fmt.Fprintf(os.Stdout, "Copying %s to %s\n", oldname, newname)
 			}
 		} else {
-			rename_err := os.Rename(oldname, newname)
-			if rename_err != nil {
+			renameErr := os.Rename(oldname, newname)
+			if renameErr != nil {
 				fmt.Fprintf(os.Stderr, "An error occurred during the renaming of %s to %s\n", oldname, newname)
-				fmt.Fprintf(os.Stderr, rename_err.Error())
+				fmt.Fprintf(os.Stderr, renameErr.Error())
 				operationSuccessful = operationSuccessful + 1
 			} else {
 				fmt.Fprintf(os.Stdout, "Renaming %s to %s\n", oldname, newname)
@@ -276,7 +276,7 @@ func uppercaseFiles(names []string) int {
 
 // Get all files and directories
 func getFilesFromDir(dirname string) ([]string, []string) {
-	var complete_path string                // final, absolute, path
+	var completePath string                // final, absolute, path
 	var filesindir = make([]os.FileInfo, 0) // files & directories found in path
 	var allfiles = make([]string, 0)
 	var alldirectories = make([]string, 0)
@@ -289,26 +289,26 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 
 	// check whether targetArg is an absolute path AND a directory
 	if filepath.IsAbs(dirname) && dirinfo.IsDir() {
-		complete_path = dirname
+		completePath = dirname
 	} else {
-		abs_path, err := filepath.Abs(dirname)
+		absPath, err := filepath.Abs(dirname)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
 		}
-		complete_path = abs_path
+		completePath = absPath
 	}
-	dir, err := os.Open(complete_path)
+	dir, err := os.Open(completePath)
 	defer dir.Close()
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Target directory %s is not a directory or can't be accessed\n", complete_path))
+		err = errors.New(fmt.Sprintf("Target directory %s is not a directory or can't be accessed\n", completePath))
 		fmt.Fprintf(os.Stderr, err.Error())
 		return alldirectories, allfiles
 	}
 
 	// scan for files/directories in path
-	filesindir, read_err := dir.Readdir(0)
-	if read_err != nil {
-		fmt.Fprintf(os.Stderr, read_err.Error())
+	filesindir, readErr := dir.Readdir(0)
+	if readErr != nil {
+		fmt.Fprintf(os.Stderr, readErr.Error())
 		return alldirectories, allfiles
 	}
 
@@ -316,9 +316,9 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 	// 2 different slices
 	for _, f := range filesindir {
 		if f.IsDir() {
-			alldirectories = append(alldirectories, filepath.Join(complete_path, f.Name()))
+			alldirectories = append(alldirectories, filepath.Join(completePath, f.Name()))
 		} else {
-			allfiles = append(allfiles, filepath.Join(complete_path, f.Name()))
+			allfiles = append(allfiles, filepath.Join(completePath, f.Name()))
 		}
 	}
 
@@ -362,12 +362,12 @@ func renameFiles(dir, files []string) int {
 				fmt.Fprintf(os.Stderr, "Invalid regexp: %s\n", regexpArg)
 				printUsage("You must give a valid regexp (or none, to operate on all files). Alternatively, add -force to force renaming all files, whether they match the regexp or not")
 				return 1
+
+			if compRegexp.MatchString(basename) == false {
+				continue
 			} else {
-				if compRegexp.MatchString(basename) == false {
-					continue
-				} else {
-					matchingfiles = append(matchingfiles, f)
-				}
+				matchingfiles = append(matchingfiles, f)
+			}
 			}
 		}
 	}
@@ -416,17 +416,17 @@ func renameFiles(dir, files []string) int {
 }
 
 func main() {
-	var success_rename int
+	var successRename int
 	var directories, files []string
 
 	flagsInit()
 
 	directories, files = getFilesFromDir(targetArg)
 
-	success_rename = renameFiles(directories, files)
+	successRename = renameFiles(directories, files)
 
 	// check that everything went smoothly
-	if success_rename == 0 && operationSuccessful == 0 {
+	if successRename == 0 && operationSuccessful == 0 {
 		fmt.Fprintf(os.Stdout, "\nRenaming complete\n")
 	} else {
 		fmt.Fprintf(os.Stdout, "\nNot all files were correctly renamed, check the previous error messages")
