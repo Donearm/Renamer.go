@@ -9,7 +9,6 @@ Author: Gianluca Fiore <forod.g@gmail.com> © 2013-2015
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -300,7 +299,7 @@ func getFilesFromDir(dirname string) ([]string, []string) {
 	dir, err := os.Open(completePath)
 	defer dir.Close()
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Target directory %s is not a directory or can't be accessed\n", completePath))
+		err = fmt.Errorf("Target directory %s is not a directory or can't be accessed\n", completePath)
 		fmt.Fprintf(os.Stderr, err.Error())
 		return alldirectories, allfiles
 	}
